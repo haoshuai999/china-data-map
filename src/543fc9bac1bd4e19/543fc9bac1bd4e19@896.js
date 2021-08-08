@@ -15,7 +15,7 @@ Inputs.select(data.columns.slice(1,-2), {value: "2020", label: "Year"})
 Inputs.radio(["Population", "Deputies"], {value: "Population"})
 )});
   main.variable(observer("metrics")).define("metrics", ["Generators", "viewof metrics"], (G, _) => G.input(_));
-  main.variable(observer("chart")).define("chart", ["d3","width","height","legend","color","china","population","year","metrics","x","year_list","y","xAxis","yAxis","margin","deputy","x2","gender_list","y2","xAxis2","yAxis2","callout","format"], function(d3,width,height,legend,color,china,population,year,metrics,x,year_list,y,xAxis,yAxis,margin,deputy,x2,gender_list,y2,xAxis2,yAxis2,callout,format)
+  main.variable(observer("chart")).define("chart", ["d3","width","height","legend","color","china","population","year","metrics","x","year_list","y","xAxis","yAxis","margin","deputy","x2","gender_list","y2","xAxis2","yAxis2","callout","format","format2"], function(d3,width,height,legend,color,china,population,year,metrics,x,year_list,y,xAxis,yAxis,margin,deputy,x2,gender_list,y2,xAxis2,yAxis2,callout,format,format2)
 {
 
   const svg = d3
@@ -46,13 +46,17 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
     .attr("class", "province")
     .attr('d', path)
     .attr("stroke", "white")
+    .attr("fill", "white")
+    .transition()
+    .duration(200)
+    .ease(d3.easeLinear)
     .attr("fill", d => {
       if(d.properties.name !== "Taiwan"){
         return color(population.get(d.properties.name)[year-2011]);
       } else {
         return "#000000";
       }
-    })
+    });
   	
   
   if (metrics == "Population") {
@@ -117,14 +121,18 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
   svg
     .selectAll(".province")
     .on("touchmove click", function(event, d) {
+      const current_population = population.get(d.properties.name)[year-2011];
+      const mouse = d3.pointer(event, this);
+      
       tooltip.call(
         callout,
         `${d.properties.name}
 Male NPC deputies；${deputy.get(d.properties.name)[0]}
 Female NPC deputies: ${deputy.get(d.properties.name)[1]}
-${year} Population: ${d.properties.name === "Taiwan" ? "N/A" : format(population.get(d.properties.name)[year-2011])}`
+${year} Population: ${d.properties.name === "Taiwan" ? "N/A" : format(current_population)}
+Population growth from last year: ${(d.properties.name === "Taiwan" || year == 2011) ? "N/A" : format2(( current_population - population.get(d.properties.name)[year-2012])/population.get(d.properties.name)[year-2012])}`
       );
-      tooltip.attr("transform", `translate(${d3.pointer(event, this)})`);
+      tooltip.attr("transform", `translate(${mouse[1] > 320 ? [mouse[0], mouse[1] - 65] : mouse})`);
       d3.select(this)
         .attr("stroke", "red")
         .raise();
@@ -165,6 +173,8 @@ ${year} Population: ${d.properties.name === "Taiwan" ? "N/A" : format(population
           .style("font-weight", "bold")
           .text(`${metrics} of ${d.properties.name}`);
         
+        tooltip.raise();
+        
       } else {
         d3.selectAll(".bar").remove();
         d3.selectAll(".bartitle").remove();
@@ -200,6 +210,8 @@ ${year} Population: ${d.properties.name === "Taiwan" ? "N/A" : format(population
           .style("font-size", 16)
           .style("font-weight", "bold")
           .text(`${metrics} of ${d.properties.name}`);
+        
+        tooltip.raise();
       }
     })
     .on("touchend mouseleave", function() {
@@ -320,7 +332,7 @@ d3.csvParse(await FileAttachment("population@3.csv").text(), d3.autoType)
   const {x, y, width: w, height: h} = text.node().getBBox();
 
   text.attr("transform", `translate(${-w / 2},${15 - y})`);
-  path.attr("d", `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
+  path.attr("d", `M${-w / 2 - 10},5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
 }
 )});
   main.variable(observer("color")).define("color", ["d3"], function(d3){return(
@@ -332,6 +344,9 @@ d3.geoPath()
   main.variable(observer("format")).define("format", ["d3"], function(d3){return(
 d3.format(",")
 )});
+  main.variable(observer("format2")).define("format2", ["d3"], function(d3){return(
+d3.format(".2%")
+)});
   main.variable(observer("y_format")).define("y_format", ["d3"], function(d3){return(
 d3.format("s")
 )});
@@ -342,7 +357,7 @@ new Map(china.features.map(d => [d.id, d.properties]))
 FileAttachment("China@5.geojson").json()
 )});
   main.variable(observer("margin")).define("margin", function(){return(
-{top: 30, right: 0, bottom: 30, left: 40}
+{top: 30, right: 10, bottom: 30, left: 40}
 )});
   main.variable(observer("d3")).define("d3", ["require"], function(require){return(
 require("d3@6")
