@@ -1,8 +1,9 @@
-import define1 from "./a33468b95d0b15b0@703.js";
+import define1 from "./c2dae147641e012a@46.js";
+import define2 from "./a33468b95d0b15b0@703.js";
 
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["China@5.geojson",require("./files/3267422dcabe6c8764b6d0563a53623c2beb3110eef3a0c26cabce860f82cd888988ca7b43f8e1e90cb49c38f7d1372e0afbfe7ec10c03f2be7277311892ff86").default],["population@3.csv",require("./files/023f2e516d30f7483d2feb8ec2216b9af7fb5a2d3ff0ff615cfbfab3331a610a36ea2eb5a096ab59013e080c0e8db70c055f18b8c2a898e0ebe67742aaae6bfb").default]]);
+  const fileAttachments = new Map([["population@3.csv",require("./files/023f2e516d30f7483d2feb8ec2216b9af7fb5a2d3ff0ff615cfbfab3331a610a36ea2eb5a096ab59013e080c0e8db70c055f18b8c2a898e0ebe67742aaae6bfb").default],["China_OLD.geojson",require("./files/d5d3b7f8adfa5caeedd4f4c3fcef02ed8273523866e0db1ea69bb00824205fad60ada99acae0c4a3515bb95ef788f5993cd20c2e944b4475057ba81006d20401").default]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer()).define(["md"], function(md){return(
 md`# China Province Population Map`
@@ -15,7 +16,7 @@ Inputs.select(data.columns.slice(1,-2), {value: "2020", label: "Year"})
 Inputs.radio(["Population", "Deputies"], {value: "Population"})
 )});
   main.variable(observer("metrics")).define("metrics", ["Generators", "viewof metrics"], (G, _) => G.input(_));
-  main.variable(observer("chart")).define("chart", ["d3","width","height","legend","color","china","population","year","metrics","x","year_list","y","xAxis","yAxis","margin","deputy","x2","gender_list","y2","xAxis2","yAxis2","callout","format","format2"], function(d3,width,height,legend,color,china,population,year,metrics,x,year_list,y,xAxis,yAxis,margin,deputy,x2,gender_list,y2,xAxis2,yAxis2,callout,format,format2)
+  main.variable(observer("chart")).define("chart", ["d3","width","height","legend","color","china","population","year","metrics","mutable province","x","year_list","y","xAxis","yAxis","margin","deputy","x2","gender_list","y2","xAxis2","yAxis2","callout","localStorage","format","format2"], function(d3,width,height,legend,color,china,population,year,metrics,$0,x,year_list,y,xAxis,yAxis,margin,deputy,x2,gender_list,y2,xAxis2,yAxis2,callout,localStorage,format,format2)
 {
 
   const svg = d3
@@ -36,7 +37,6 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
   let path = d3.geoPath()
     .projection(projection);
 
-
   svg
     .append('g')
     .selectAll('path')
@@ -44,6 +44,15 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
   	.enter()
     .append('path')
     .attr("class", "province")
+    .attr("id", d => {
+      if (d.properties.name == "Inner Mongolia"){
+        return "Mongolia"
+      } else if (d.properties.name == "Hong Kong") {
+        return "HK"
+      } else {
+        return d.properties.name
+      }
+    })
     .attr('d', path)
     .attr("stroke", "white")
     .attr("fill", "white")
@@ -57,13 +66,14 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
         return "#000000";
       }
     });
+  
   	
   
   if (metrics == "Population") {
     svg.append("g")
         .attr("class","bar")
       .selectAll("rect")
-      .data(population.get("Guangdong"))
+      .data(population.get(`${$0.value.length !=0 ? $0.value : "Guangdong"}`))
       .join("rect")
         .attr("x", (d, i) => x(year_list[i]))
         .attr("y", d => y(d))
@@ -85,13 +95,13 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
       .attr("text-anchor", "middle")
       .style("font-size", 16)
       .style("font-weight", "bold")
-      .text(`${metrics} of Guangdong`);
+      .text(`${metrics} of ${$0.value.length !=0 ? $0.value : "Guangdong"}`);
 
   } else {
     svg.append("g")
         .attr("class","bar")
       .selectAll("rect")
-      .data(deputy.get("Guangxi"))
+      .data(deputy.get(`${$0.value.length !=0 ? $0.value : "Guangxi"}`))
       .join("rect")
         .attr("x", (d, i) => x2(gender_list[i]) + x2.bandwidth()/4)
         .attr("y", d => y2(d))
@@ -113,7 +123,7 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
       .attr("text-anchor", "middle")
       .style("font-size", 16)
       .style("font-weight", "bold")
-      .text(`${metrics} of Guangxi`);
+      .text(`${metrics} of ${$0.value.length !=0 ? $0.value : "Guangxi"}`);
   }
 
   const tooltip = svg.append("g");
@@ -122,7 +132,28 @@ Inputs.radio(["Population", "Deputies"], {value: "Population"})
     .selectAll(".province")
     .on("touchmove click", function(event, d) {
       const current_population = population.get(d.properties.name)[year-2011];
+          
       const mouse = d3.pointer(event, this);
+
+      tooltip.call(callout, null);
+
+      let last_project = JSON.parse(localStorage.getItem("data"))
+
+      if (last_project != null) {
+        if (last_project == "Inner Mongolia"){
+          last_project[0] = "Mongolia"
+        } else if (last_project == "Hong Kong") {
+          last_project[0] = "HK"
+        } else {}
+        d3.select(`#${last_project[0]}`)
+          .attr("stroke", "white")
+          .lower();
+
+        $0.value = []
+      }
+      
+      $0.value = $0.value.concat([d.properties.name]);
+      localStorage.setItem("data", JSON.stringify($0.value));
       
       tooltip.call(
         callout,
@@ -132,7 +163,8 @@ Female NPC deputies: ${deputy.get(d.properties.name)[1]}
 ${year} Population: ${d.properties.name === "Taiwan" ? "N/A" : format(current_population)}
 Population growth from last year: ${(d.properties.name === "Taiwan" || year == 2011) ? "N/A" : format2(( current_population - population.get(d.properties.name)[year-2012])/population.get(d.properties.name)[year-2012])}`
       );
-      tooltip.attr("transform", `translate(${mouse[1] > 320 ? [mouse[0], mouse[1] - 65] : mouse})`);
+
+      tooltip.attr("transform", `translate(${mouse[1] > 350 ? [mouse[0], mouse[1] - 50] : mouse})`);
       d3.select(this)
         .attr("stroke", "red")
         .raise();
@@ -172,7 +204,7 @@ Population growth from last year: ${(d.properties.name === "Taiwan" || year == 2
           .style("font-size", 16)
           .style("font-weight", "bold")
           .text(`${metrics} of ${d.properties.name}`);
-        
+
         tooltip.raise();
         
       } else {
@@ -210,16 +242,16 @@ Population growth from last year: ${(d.properties.name === "Taiwan" || year == 2
           .style("font-size", 16)
           .style("font-weight", "bold")
           .text(`${metrics} of ${d.properties.name}`);
-        
+
         tooltip.raise();
       }
     })
-    .on("touchend mouseleave", function() {
-      tooltip.call(callout, null);
-      d3.select(this)
-        .attr("stroke", "white")
-        .lower();
-    });
+    // .on("touchend mouseleave", function() {
+    //   tooltip.call(callout, null);
+    //   d3.select(this)
+    //     .attr("stroke", "white")
+    //     .lower();
+    // });
 
   return svg.node();
 }
@@ -297,7 +329,7 @@ new Map(data.map(d => [d.Delegation, [d["2011"],d["2012"],d["2013"],d["2014"],d[
 new Map(data.map(d => [d.Delegation, [d.Men, d.Women]])).set("Taiwan",["N/A","N/A"])
 )});
   main.variable(observer("height")).define("height", ["width"], function(width){return(
-  width > 500 ? 400 : 550
+width > 500 ? 420 : 550
 )});
   main.variable(observer("data")).define("data", ["d3","FileAttachment"], async function(d3,FileAttachment){return(
 d3.csvParse(await FileAttachment("population@3.csv").text(), d3.autoType)
@@ -350,19 +382,26 @@ d3.format(".2%")
   main.variable(observer("y_format")).define("y_format", ["d3"], function(d3){return(
 d3.format("s")
 )});
-  main.variable(observer("states")).define("states", ["china"], function(china){return(
-new Map(china.features.map(d => [d.id, d.properties]))
-)});
   main.variable(observer("china")).define("china", ["FileAttachment"], function(FileAttachment){return(
-FileAttachment("China@5.geojson").json()
+FileAttachment("China_OLD.geojson").json()
 )});
   main.variable(observer("margin")).define("margin", function(){return(
-{top: 30, right: 10, bottom: 30, left: 40}
+{top: 30, right: 30, bottom: 30, left: 40}
 )});
+  main.define("initial province", ["localStorage"], function(localStorage)
+{
+  var initial = JSON.parse(localStorage.getItem("data") || "[]");
+  return initial;
+}
+);
+  main.variable(observer("mutable province")).define("mutable province", ["Mutable", "initial province"], (M, _) => new M(_));
+  main.variable(observer("province")).define("province", ["mutable province"], _ => _.generator);
+  const child1 = runtime.module(define1);
+  main.import("localStorage", child1);
+  const child2 = runtime.module(define2);
+  main.import("legend", child2);
   main.variable(observer("d3")).define("d3", ["require"], function(require){return(
 require("d3@6")
 )});
-  const child1 = runtime.module(define1);
-  main.import("legend", child1);
   return main;
 }

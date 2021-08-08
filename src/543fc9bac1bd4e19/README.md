@@ -1,6 +1,6 @@
 # China Province Population Map
 
-https://observablehq.com/d/543fc9bac1bd4e19@896
+https://observablehq.com/d/543fc9bac1bd4e19@1001
 
 View this notebook in your browser by running a web server in this folder. For
 example:
