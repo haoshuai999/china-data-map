@@ -11,3 +11,34 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.order {
+  display:flex;
+  flex-flow: column;
+}
+
+.year {
+  float: left;
+}
+
+.deputy {
+  float: right;
+  margin-right: 15%;
+}
+
+.year-mobile {
+  order: 1;
+}
+
+.chart {
+  order: 2;
+}
+
+.deputy-mobile {
+  order: 3;
+}
+
+.deputy-mobile form{
+  padding-top: 5px;
+  display: block !important;
+}
