@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/china-data-map/static/css/main.5c6ad342.chunk.css",
-    "main.js": "/china-data-map/static/js/main.a66c109c.chunk.js",
-    "main.js.map": "/china-data-map/static/js/main.a66c109c.chunk.js.map",
+    "main.js": "/china-data-map/static/js/main.e463f061.chunk.js",
+    "main.js.map": "/china-data-map/static/js/main.e463f061.chunk.js.map",
     "runtime-main.js": "/china-data-map/static/js/runtime-main.efd31604.js",
     "runtime-main.js.map": "/china-data-map/static/js/runtime-main.efd31604.js.map",
     "static/js/2.784ae49d.chunk.js": "/china-data-map/static/js/2.784ae49d.chunk.js",
@@ -19,6 +19,6 @@
     "static/js/runtime-main.efd31604.js",
     "static/js/2.784ae49d.chunk.js",
     "static/css/main.5c6ad342.chunk.css",
-    "static/js/main.a66c109c.chunk.js"
+    "static/js/main.e463f061.chunk.js"
   ]
 }
